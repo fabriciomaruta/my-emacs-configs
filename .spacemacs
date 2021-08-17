@@ -2,7 +2,10 @@
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
 (load-file "helperEmacs.el")
-
+;; (require 'company-tabnine)
+;; (add-to-list 'company-backends #'company-tabnine)
+;; (company-tabnine-install-binary)
+;; (company-mode)
 (defun insert-consolelog()
   (interactive)
   (insert "\t")
@@ -45,6 +48,7 @@ This function should only modify configuration layer settings."
    '(
      yaml
      python
+     lsp
      sql
      html
      javascript
@@ -68,6 +72,16 @@ This function should only modify configuration layer settings."
                  javascript-backend 'tide)
      (typescript :variables
                  javascript-backend 'tide)
+     (auto-completion :variables auto-completion-enable-snippets-in-popup nil auto-completion-enable-help-tooltip t auto-completion-enable-sort-by-usage t)
+     (python :variables
+             python-backend 'lsp
+             ;; python-tab-width 4
+             python-fill-column 99
+             python-formatter 'yapf
+             python-format-on-save t
+             python-sort-imports-on-save t
+             python-pipenv-activate t)
+     (python :variables python-test-runner 'pytest)
      ;; org
      ;; (shell :variables
      ;;        shell-default-height 30
@@ -93,6 +107,7 @@ This function should only modify configuration layer settings."
                                       rjsx-mode
                                       yasnippet-snippets
                                       prettier-js
+                                      jedi :location elpa
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -584,13 +599,10 @@ dump.")
 
 ;; ;; hooks
 (add-hook 'before-save-hook 'tide-format-before-save)
-
-
 ;; ;; use rjsx-mode for .js* files except json and use tide with rjsx
 (add-to-list 'auto-mode-alist '("\\.js.*$" . rjsx-mode))
 (add-to-list 'auto-mode-alist '("\\.json$" . json-mode))
 (add-hook 'rjsx-mode-hook 'tide-setup-hook)
-
 
 ;; web-mode extra config
 (add-hook 'web-mode-hook 'tide-setup-hook
@@ -598,7 +610,7 @@ dump.")
                   ("tsx" ('tide-setup-hook))
                   (_ (my-web-mode-hook)))))
 (flycheck-add-mode 'typescript-tslint 'web-mode)
-(add-hook 'web-mode-hook 'company-mode)
+(add-hook 'web-mode-hook 'mode)
 (add-hook 'web-mode-hook 'prettier-js-mode)
 (add-hook 'web-mode-hook #'turn-on-smartparens-mode t))
  ;; ...
@@ -618,7 +630,7 @@ This function is called at the very end of Spacemacs initialization."
  ;; If there is more than one, they won't work right.
  '(evil-want-Y-yank-to-eol nil)
  '(package-selected-packages
-   '(typescript-mode import-js grizzl add-node-modules-path yasnippet-snippets yapfify yaml-mode ws-butler writeroom-mode winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org tern-auto-complete tagedit symon symbol-overlay string-inflection string-edit sphinx-doc spaceline-all-the-icons smeargle slim-mode scss-mode sass-mode rjsx-mode restart-emacs rainbow-delimiters pytest pyenv-mode py-isort pug-mode prettier-js popwin poetry pippel pipenv pip-requirements pcre2el password-generator paradox overseer org-superstar open-junk-file npm-mode nodejs-repl nameless multi-line magit-svn magit-section magit-gitflow macrostep lorem-ipsum livid-mode live-py-mode link-hint json-navigator json-mode js2-refactor js-doc indent-guide importmagic impatient-mode hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link fuzzy forge flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr emmet-mode elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish devdocs define-word cython-mode company-web company-anaconda column-enforce-mode clean-aindent-mode centered-cursor-mode blacken auto-yasnippet auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line ac-js2 ac-ispell)))
+   '(dap-mode bui lsp-ui lsp-treemacs lsp-python-ms lsp-pyright lsp-origami origami helm-lsp lsp-mode lv flycheck-pos-tip company-statistics company-quickhelp pos-tip jedi jedi-core python-environment pyvenv epc ctable concurrent deferred anaconda-mode pythonic company-tabnine yasnippet-snippets yapfify yaml-mode ws-butler writeroom-mode winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org tide tern-auto-complete tagedit symon symbol-overlay string-inflection string-edit sql-indent sphinx-doc spaceline-all-the-icons smeargle slim-mode scss-mode sass-mode rjsx-mode restart-emacs rainbow-delimiters quickrun pytest pyenv-mode py-isort pug-mode prettier-js popwin poetry pippel pipenv pip-requirements pcre2el password-generator paradox overseer org-superstar open-junk-file npm-mode nose nodejs-repl nameless multi-line magit-section macrostep lorem-ipsum livid-mode live-py-mode link-hint json-navigator json-mode js2-refactor js-doc indent-guide importmagic impatient-mode hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link fuzzy forge font-lock+ flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr emmet-mode elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish define-word cython-mode company-web company-anaconda column-enforce-mode clean-aindent-mode centered-cursor-mode blacken auto-yasnippet auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line ac-js2 ac-ispell)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
