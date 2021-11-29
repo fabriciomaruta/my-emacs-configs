@@ -1,11 +1,27 @@
 ;; -*- mode: emacs-lisp; lexical-binding: t -*-
 ;; This file is loaded by Spacemacs at startup.
 ;; It must be stored in your home directory.
-(load-file "helperEmacs.el")
 ;; (require 'company-tabnine)
 ;; (add-to-list 'company-backends #'company-tabnine)
 ;; (company-tabnine-install-binary)
 ;; (company-mode)
+(defun my-increase-opacity()
+  (interactive)
+  (let ((increase (+ 10 (car (frame-parameter nil 'alpha)))))
+    (if (> increase 99)(setq increase 99))
+    (set-frame-parameter (selected-frame) 'alpha (values increase 75)))
+  )
+
+(defun my-decrease-opacity()
+  (interactive)
+  (let ((decrease (- (car (frame-parameter nil 'alpha)) 10)))
+    (if (< decrease 20)(setq decrease 20))
+    (set-frame-parameter (selected-frame) 'alpha (values decrease 75)))
+  )
+
+(global-set-key (kbd "M-o") 'my-increase-opacity)
+(global-set-key (kbd "M-i") 'my-decrease-opacity)
+
 (defun insert-consolelog()
   (interactive)
   (insert "\t")
@@ -68,6 +84,7 @@ This function should only modify configuration layer settings."
      ;; lsp
      ;; markdown
      multiple-cursors
+     (multiple-cursors :variables multiple-cursors-backend 'evil-mc)
      (javascript :variables
                  javascript-backend 'tide)
      (typescript :variables
@@ -75,13 +92,14 @@ This function should only modify configuration layer settings."
      (auto-completion :variables auto-completion-enable-snippets-in-popup nil auto-completion-enable-help-tooltip t auto-completion-enable-sort-by-usage t)
      (python :variables
              python-backend 'lsp
-             ;; python-tab-width 4
+             python-tab-width 4
              python-fill-column 99
              python-formatter 'yapf
              python-format-on-save t
              python-sort-imports-on-save t
              python-pipenv-activate t)
-     (python :variables python-test-runner 'pytest)
+     ;; (python :variables python-test-runner 'pytest nose)
+     (yaml :variables yaml-enable-lsp t)
      ;; org
      ;; (shell :variables
      ;;        shell-default-height 30
@@ -108,6 +126,7 @@ This function should only modify configuration layer settings."
                                       yasnippet-snippets
                                       prettier-js
                                       jedi :location elpa
+                                      highlight-indent-guides
                                       )
 
    ;; A list of packages that cannot be updated.
@@ -133,6 +152,7 @@ It should only modify the values of Spacemacs settings."
   ;; This setq-default sexp is an exhaustive list of all the supported
   ;; spacemacs settings.
   (setq-default
+   tab-width 2
    ;; If non-nil then enable support for the portable dumper. You'll need
    ;; to compile Emacs 27 from source following the instructions in file
    ;; EXPERIMENTAL.org at to root of the git repository.
@@ -581,7 +601,14 @@ dump.")
 ;; Put your configuration code here, except for variables that should be set
 ;; before packages are loaded.")
 (defun dotspacemacs/user-config ()
- ;; ...
+  ;; ...
+  (setq-default flycheck-disabled-checkers '(python-pylint))
+
+  (setq highlight-indent-guides-method 'character)
+  (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+
+  (set-frame-parameter (selected-frame)'alpha '(90 . 90))
+  (add-to-list 'default-frame-alist'(alpha . (90 . 90)))
  ;; tide def func:
  (defun tide-setup-hook ()
     (tide-setup)
@@ -603,13 +630,24 @@ dump.")
 (add-to-list 'auto-mode-alist '("\\.js.*$" . rjsx-mode))
 (add-to-list 'auto-mode-alist '("\\.json$" . json-mode))
 (add-hook 'rjsx-mode-hook 'tide-setup-hook)
-
+;; (flycheck-add-next-checker 'python-flake8 'python-pylint)
+(add-hook 'python-mode-hook (lambda ()
+                              (flycheck-mode 1)
+                              (semantic-mode 1)
+                              (setq-local lsp-diagnostics-provider :none)
+                              ;; (add-to-list 'flycheck-disabled-checkers 'lsp)
+                              (setq flycheck-checker 'python-flake8)
+                              ;; (setq flycheck-checker 'python-flake8
+                              ;;       flycheck-checker-error-threshold 900
+                              ;;       flycheck-pylintrc "~/.pylintrc")
+                              ))
 ;; web-mode extra config
 (add-hook 'web-mode-hook 'tide-setup-hook
           (lambda () (pcase (file-name-extension buffer-file-name)
                   ("tsx" ('tide-setup-hook))
                   (_ (my-web-mode-hook)))))
-(flycheck-add-mode 'typescript-tslint 'web-mode)
+;; if typescript linter not run, uncomment line below
+;; (flycheck-add-mode 'typescript-tslint 'web-mode)
 (add-hook 'web-mode-hook 'mode)
 (add-hook 'web-mode-hook 'prettier-js-mode)
 (add-hook 'web-mode-hook #'turn-on-smartparens-mode t))
@@ -629,8 +667,15 @@ This function is called at the very end of Spacemacs initialization."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(evil-want-Y-yank-to-eol nil)
+ '(flycheck-flake8rc ".flake8rc")
+ '(lsp-pyls-plugins-autopep8-enabled nil)
+ '(lsp-pyls-plugins-flake8-config nil)
+ '(lsp-pyls-plugins-jedi-completion-fuzzy t)
+ '(lsp-pyls-plugins-pycodestyle-enabled nil)
+ '(lsp-pyls-plugins-pyflakes-enabled nil)
+ '(lsp-python-ms-warnings ["parameter-already-specified"])
  '(package-selected-packages
-   '(dap-mode bui lsp-ui lsp-treemacs lsp-python-ms lsp-pyright lsp-origami origami helm-lsp lsp-mode lv flycheck-pos-tip company-statistics company-quickhelp pos-tip jedi jedi-core python-environment pyvenv epc ctable concurrent deferred anaconda-mode pythonic company-tabnine yasnippet-snippets yapfify yaml-mode ws-butler writeroom-mode winum which-key web-mode web-beautify volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil toc-org tide tern-auto-complete tagedit symon symbol-overlay string-inflection string-edit sql-indent sphinx-doc spaceline-all-the-icons smeargle slim-mode scss-mode sass-mode rjsx-mode restart-emacs rainbow-delimiters quickrun pytest pyenv-mode py-isort pug-mode prettier-js popwin poetry pippel pipenv pip-requirements pcre2el password-generator paradox overseer org-superstar open-junk-file npm-mode nose nodejs-repl nameless multi-line magit-section macrostep lorem-ipsum livid-mode live-py-mode link-hint json-navigator json-mode js2-refactor js-doc indent-guide importmagic impatient-mode hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-pydoc helm-purpose helm-projectile helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-ag google-translate golden-ratio gitignore-templates gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link fuzzy forge font-lock+ flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr emmet-mode elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish define-word cython-mode company-web company-anaconda column-enforce-mode clean-aindent-mode centered-cursor-mode blacken auto-yasnippet auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line ac-js2 ac-ispell)))
+   '(highlight-indent-guides dap-mode bui lsp-ui lsp-treemacs lsp-python-ms lsp-pyright lsp-origami origami jedi jedi-core python-environment helm-lsp lsp-mode flycheck-pos-tip company-statistics company-quickhelp pos-tip dockerfile-mode docker tablist docker-tramp yasnippet-snippets yapfify yaml-mode web-mode web-beautify treemacs-magit tide typescript-mode tern-auto-complete tern tagedit sql-indent sphinx-doc smeargle slim-mode scss-mode sass-mode rjsx-mode pytest pyenv-mode py-isort pug-mode prettier-js poetry pippel pipenv pyvenv pip-requirements npm-mode nose nodejs-repl livid-mode live-py-mode json-navigator hierarchy json-mode json-snatcher json-reformat js2-refactor multiple-cursors js-doc importmagic epc ctable concurrent deferred impatient-mode htmlize helm-pydoc helm-gitignore helm-git-grep helm-css-scss helm-company helm-c-yasnippet haml-mode gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link fuzzy forge yaml markdown-mode magit ghub closql emacsql-sqlite emacsql treepy magit-section git-commit with-editor transient emmet-mode cython-mode company-web web-completion-data company-anaconda company blacken auto-yasnippet yasnippet anaconda-mode pythonic ac-js2 skewer-mode js2-mode simple-httpd ac-ispell auto-complete treemacs-evil evil-easymotion ws-butler writeroom-mode winum which-key volatile-highlights vi-tilde-fringe uuidgen use-package undo-tree treemacs-projectile treemacs-persp treemacs-icons-dired toc-org symon symbol-overlay string-inflection string-edit spaceline-all-the-icons restart-emacs request rainbow-delimiters quickrun popwin pcre2el password-generator paradox overseer org-superstar open-junk-file nameless multi-line macrostep lorem-ipsum link-hint indent-guide hybrid-mode hungry-delete hl-todo highlight-parentheses highlight-numbers highlight-indentation helm-xref helm-themes helm-swoop helm-purpose helm-projectile helm-org helm-mode-manager helm-make helm-ls-git helm-flx helm-descbinds helm-ag google-translate golden-ratio font-lock+ flycheck-package flycheck-elsa flx-ido fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-collection evil-cleverparens evil-args evil-anzu eval-sexp-fu emr elisp-slime-nav editorconfig dumb-jump drag-stuff dotenv-mode dired-quick-sort diminish define-word column-enforce-mode clean-aindent-mode centered-cursor-mode auto-highlight-symbol auto-compile aggressive-indent ace-link ace-jump-helm-line)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
